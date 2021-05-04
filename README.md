@@ -4,16 +4,15 @@ Created for sending english word with translate every day for improve vocabulary
 ### Stack:
   * Typescript
   * Node
-  * Express
-  * PostgreSQL
   * Telegraf
+  * TypeORM
 
 For install:
 ```
 npm install
 ```
 
-For run app and bot:
+For run bot:
 ```
 npm start
 ```

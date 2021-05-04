@@ -1,18 +1,48 @@
-require('dotenv').config()
-import express from 'express'
-import './bot/bot'
-import { wordRouter } from './routes/word.routes'
+import 'reflect-metadata'
+import dotenv from 'dotenv'
+dotenv.config()
+import { createConnection } from 'typeorm'
 
-const PORT = process.env.PORT
+import { Telegraf, Markup, Telegram, Scenes, session } from 'telegraf'
+import { startScene } from './start/start.controller'
+import { CMD, HOURS, TXT } from './constants'
+import { errorHandler } from './utils/errorHandler'
+import { Update } from 'typegram'
 
-// bot.telegram.setWebhook('https://----.loca.lt')
+async function main() {
+  const db = await createConnection()
 
-const app = express()
+  const token = process.env.BOT_TOKEN
 
-app.use(express.json())
-app.use('/api', wordRouter)
-// app.use(bot.webhookCallback('/api'), wordRouter)
+  const telegram = new Telegram(token!, {})
 
-app.listen(PORT, () =>
-  console.log(`Server started at http://localhost:${PORT}`)
-)
+  const bot = new Telegraf<Scenes.SceneContext>(token!)
+
+  const stage = new Scenes.Stage<Scenes.SceneContext>([startScene])
+
+  bot.use(Telegraf.log())
+  bot.use(session())
+  bot.use(stage.middleware())
+
+  bot.start((ctx) => {
+    console.log('ctx:', ctx)
+
+    return ctx.scene.enter('start')
+  })
+
+  bot.command(
+    CMD.CHOOSE_TIME,
+    (ctx) => ctx.reply(TXT.chooseHour, Markup.keyboard(HOURS, { columns: 4 })),
+
+    bot.hears(HOURS, (ctx) => ctx.reply(`${TXT.sendAt} ${ctx.message.text}`))
+  )
+
+  bot.help((ctx) => ctx.reply(TXT.help))
+
+  bot.launch()
+
+  process.once('SIGINT', () => bot.stop('SIGINT'))
+  process.once('SIGTERM', () => bot.stop('SIGTERM'))
+}
+
+main()

@@ -1,10 +1,10 @@
-import { Request, Response } from 'express'
-import wordService from '../service/word.service'
+import { getRandomNumber } from '../utils/random'
+import wordService from './word.service'
 
 class WordController {
   async addWord(word: string) {
     try {
-      const newWord =  await wordService.addWord(word)
+      const newWord = await wordService.addWord(word)
       return newWord
     } catch (error) {
       console.error(error)
@@ -20,11 +20,20 @@ class WordController {
     }
   }
 
-  async getWord(req: Request, res: Response) {
-    try {      
-      const id = req.body.id as number
+  async getWord(id: number) {
+    try {
       const word = await wordService.getWord(id)
-      res.json(word)
+      return word
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async getRandomWord() {
+    try {
+      const id = getRandomNumber(1, 9895)
+      const word = await wordService.getWord(id)
+      return word
     } catch (error) {
       console.error(error)
     }
